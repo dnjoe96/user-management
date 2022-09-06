@@ -2,23 +2,26 @@
 """ User Schema Module"""
 from flask_sqlalchemy import Model
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy import Column, Integer, String
-
-Base = declarative_base()
+from api.v0.app import db
 
 
-class User(Base):
+class User(db.Model):
     """ User class """
     __tablename__ = 'users'
 
-    id = Column(Integer, primary_key=True, autoincrement=True)
-    email = Column(String(250), nullable=False)
-    hashed_password = Column(String(250), nullable=False)
-    session_id = Column(String(250), nullable=True)
-    reset_token = Column(String(250), nullable=True)
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    email = db.Column(db.String(250), nullable=False)
+    hashed_password = db.Column(db.String(250), nullable=False)
+    session_id = db.Column(db.String(250), nullable=True)
+    reset_token = db.Column(db.String(250), nullable=True)
 
     def __repr__(self):
         """ Class object representation """
         return '<User(id=\'%s\', email=\'%s\')>' % (
             self.id, self.email
         )
+
+
+class Credentials(db.Model):
+    __tablename__ = 'credentials'
+    pass

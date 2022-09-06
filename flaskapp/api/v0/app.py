@@ -7,6 +7,7 @@ from typing import Tuple
 
 # from api.v0.user.views import app_views
 from flask import Flask, jsonify, abort, request, Response
+from flask_sqlalchemy import SQLAlchemy
 import flask_cors
 import os
 from api.v0 import app_views
@@ -16,6 +17,7 @@ from api.v0.error import app_err
 app = Flask(__name__)
 app.register_blueprint(app_views)
 app.register_blueprint(app_err)
+db = SQLAlchemy()
 
 flask_cors.CORS(app, resources={r"/api/v0/*": {"origins": "*"}})
 auth = os.environ.get('AUTH_TYPE', None)
