@@ -1,55 +1,59 @@
-from sqlalchemy import create_engine
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker
-from sqlalchemy.exc import InvalidRequestError
-from sqlalchemy.orm.exc import NoResultFound
-from sqlalchemy.orm.session import Session
-from typing import Callable
-from api.v0.user.models import User, Session, Credentials
-from api.v0.app import db
+#!/usr/bin/env python3
+""" User module
+"""
+import hashlib
+from models.base import Base
 
 
-class DB:
-    """DB class
+class User(Base):
+    """ User class
     """
 
-    def __init__(self) -> None:
-        """Initialize a new DB instance
+    def __init__(self, *args: list, **kwargs: dict):
+        """ Initialize a User instance
         """
-        self.__session = None
+        super().__init__(*args, **kwargs)
+        self.email = kwargs.get('email')
+        self._password = kwargs.get('_password')
+        self.first_name = kwargs.get('first_name')
+        self.last_name = kwargs.get('last_name')
 
     @property
-    def _session(self) -> Session:
-        """Memoized session object
+    def password(self) -> str:
+        """ Getter of the password
         """
-        return db.session
+        return self._password
 
-    def add_user(self, email: str, hashed_password: str) -> User:
-        """ Method to add a new user """
-        user = User(id=1, email=email, hashed_password=hashed_password)
-        self._session.add(user)
-        self._session.commit()
-        return user
+    @password.setter
+    def password(self, pwd: str):
+        """ Setter of a new password: encrypt in SHA256
+        """
+        if pwd is None or type(pwd) is not str:
+            self._password = None
+        else:
+            self._password = hashlib.sha256(pwd.encode()).hexdigest().lower()
 
-    # @staticmethod
-    def find_user_by(self, **vals) -> User:
-        """ find a user by an arbitrary attribute """
-        try:
-            user = self._session.query(User).filter_by(**vals).first()
-        except TypeError:
-            raise InvalidRequestError
-        if user is None:
-            raise NoResultFound
-        return user
+    def is_valid_password(self, pwd: str) -> bool:
+        """ Validate a password
+        """
+        if pwd is None or type(pwd) is not str:
+            return False
+        if self.password is None:
+            return False
+        pwd_e = pwd.encode()
+        return hashlib.sha256(pwd_e).hexdigest().lower() == self.password
 
-    def update_user(self, user_id: int, **vars) -> None:
-        """ method to update a user and save in db"""
-        try:
-            user = self.find_user_by(id=user_id)
-            for key, value in vars.items():
-                setattr(user, key, value)
-        except Exception:
-            raise Exception
-
-        self._session.commit()
-        return None
+    def display_name(self) -> str:
+        """ Display User name based on email/first_name/last_name
+        """
+        if self.email is None and self.first_name is None \
+                and self.last_name is None:
+            return ""
+        if self.first_name is None and self.last_name is None:
+            return "{}".format(self.email)
+        if self.last_name is None:
+            return "{}".format(self.first_name)
+        if self.first_name is None:
+            return "{}".format(self.last_name)
+        else:
+            return "{} {}".format(self.first_name, self.last_name)
