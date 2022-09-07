@@ -6,18 +6,18 @@ from . import app_err
 def not_found(error) -> tuple[Response, int]:
     """ Not found handler
     """
-    return jsonify({"error": "Not found"}), 404
+    return jsonify({"errors": "Not found"}), 404
 
 
 @app_err.errorhandler(401)
 def unauthorized(error) -> tuple[Response, int]:
     """ Error handler for Unauthorised
     """
-    return jsonify({"error": "Unauthorized"}), 401
+    return jsonify({"errors": "Unauthorized"}), 401
 
 
 @app_err.errorhandler(403)
 def forbidden(error) -> tuple[Response, int]:
     """ Error handler for Forbidden
     """
-    return jsonify({"error": "Forbidden"}), 403
+    return jsonify({"errors": "Forbidden"}), 403
