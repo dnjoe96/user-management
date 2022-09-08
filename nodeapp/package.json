@@ -16,7 +16,7 @@
   "scripts": {
     "start": "node ./src/server.js",
     "tsc": "tsc",
-    "dev": "node ./src/server.js",
+    "dev": "nodemon ./src/server.js",
     "prod": "tsc && node ./www/server.js",
     "clean": "rimraf www/ || true",
     "build": "npm run clean && tsc && cp -rf src/config www/config && cp .npmrc www/.npmrc && cp package.json www/package.json && cd www && zip -r Archive.zip . && cd ..",
@@ -40,7 +40,8 @@
     "pg": "^8.7.3",
     "pg-hstore": "^2.3.4",
     "redis": "^3.1.1",
-    "sequelize": "^6.20.1"
+    "sequelize": "^6.20.1",
+    "uuid": "^9.0.0"
   },
   "devDependencies": {
     "@babel/cli": "^7.8.4",
