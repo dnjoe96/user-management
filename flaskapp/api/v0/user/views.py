@@ -22,9 +22,12 @@ def login():
     password = request.json.get('password')
 
     user = User.query.filter_by(username=username).first()
-    print(user.username)
+
     if not user:
-        abort(401, {"message": "user not found"})
+        return jsonify({"message": "user not found or user inactive"}), 403
+    print(user.active)
+    if user.active == '0':
+        return jsonify({'status': 'false', 'message': 'user is not active'}), 403
 
     cred = Credentials.query.filter_by(user_id=user.id).first()
     if not password:
@@ -138,12 +141,15 @@ def activate_user(user_id, token):
 @user_app.route('/deactivate', methods=['PUT'], strict_slashes=False)
 def deactivate_user():
     data = request.json.get('username')
-    user = User.query.filer_by(username=data)
-    user.active = 0
-    db.session.commit()
 
-    # find user session in Session table and delete session.
-    return jsonify({'status': 'true', 'message': f'user {data} deactivated successfully'}), 200
+    user = User.query.filter_by(username=data).first()
+    print(user)
+    if user:
+        user.active = 0
+        db.session.commit()
+        return jsonify({'status': 'true', 'message': f'user {data} deactivated successfully'}), 200
+    return jsonify({'status': 'true', 'message': f'user not found'}), 200
+
 
 
 @user_app.route('/role', methods=['POST'])

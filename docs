@@ -1,3 +1,4 @@
+<<<<<<< HEAD
  // "build": "babel src --out-dir dist",
     // "start": "node ./dist/bin/www.js",
     // "start:dev": "nodemon --ignore dist/ --ignore test/ --exec babel-node ./src/bin/www.js",
@@ -15,3 +16,35 @@
     git push heroku HEAD:master
     heroku create myapp --buildpack heroku/python
     https://project-alxapp01.herokuapp.com/
+=======
+
+    
+    
+    Deploy node app
+    
+    move code to staging area
+    heroku login
+    heroku apps:create project-alxapp01 --buildpack heroku/nodejs
+    
+    heroku git:remote -a project-alxapp01
+    git push heroku HEAD:master
+    
+    heroku create myapp --buildpack heroku/python
+    https://project-alxapp01.herokuapp.com/
+    
+    
+    
+    Deploy flask app
+    
+    move code to staging area
+    heroku login
+    heroku apps:create project-alxapp02 --buildpack heroku/python
+    
+    heroku git:remote -a project-alxapp02
+    git push heroku HEAD:master
+    
+    heroku create myapp --buildpack heroku/python
+    https://project-alxapp02.herokuapp.com/
+    
+    
+>>>>>>> 9221b4d (Add docs)
