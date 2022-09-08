@@ -1,22 +1,4 @@
 import { Router } from 'express';
-<<<<<<< HEAD
-
-// import { User } from '../models/User.js';
-// import { AuthRouter, requireAuth } from './auth.router.js';
-
-const router = Router();
-
-// router.use('/user', AuthRouter);
-
-router.get('/', async (req, res) => {
-  res.status(200).send('I work')
-});
-
-router.get('/:id', async (req, res) => {
-    let { id } = req.params;
-    const item = await User.findByPk(id);
-    res.send(item);
-=======
 import { v4 as uuidv4 } from 'uuid';
 import { User } from '../models/Userc.js';
 import { Credential } from '../models/Credential.js';
@@ -247,10 +229,9 @@ router.post('/sdsdssdsd', async (req, res) => {
     }
 
     // Generate JWT
-    const jwt = generateJWT(savedUser);
+    // const jwt = generateJWT(savedUser);
 
     res.status(201).send({token: jwt, user: savedUser.short()});
->>>>>>> pydev
 });
 
 export const UserRouter = router;
