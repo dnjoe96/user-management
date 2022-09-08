@@ -10,7 +10,7 @@ export const config = {
     "aws_media_bucket": "udagram-ruttner-dev"
   },
   "jwt": {
-    "secret": " "
+    "secret": "secret"
   },
   "prod": {
     "username": "",
