@@ -130,6 +130,7 @@ def activate_user(user_id, token):
     if user.activation_token != token:
         return jsonify({'status': 'false', 'message': 'Invalid token'}), 403
     user.active = 1
+    user.activation_token = ''
     db.session.commit()
     return jsonify({'status': 'true', 'message': f"User {user.username} is activated. Congratulations!!"}), 200
 
