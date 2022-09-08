@@ -88,7 +88,7 @@ router.put('/edit/<username>', async (req, res) => {
 });
 
 router.get('/activate/:user_id/:token', async (req, res) => {
-  // login endpoint
+  // user account activation endpoint
   const data = req.params
   console.log(data);
 
@@ -229,7 +229,7 @@ router.post('/sdsdssdsd', async (req, res) => {
     }
 
     // Generate JWT
-    const jwt = generateJWT(savedUser);
+    // const jwt = generateJWT(savedUser);
 
     res.status(201).send({token: jwt, user: savedUser.short()});
 });
