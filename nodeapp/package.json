@@ -15,11 +15,8 @@
   "main": "server.js",
   "scripts": {
     "start": "node ./src/server.js",
-    "tsc": "tsc",
     "dev": "nodemon ./src/server.js",
-    "prod": "tsc && node ./www/server.js",
-    "clean": "rimraf www/ || true",
-    "build": "npm run clean && tsc && cp -rf src/config www/config && cp .npmrc www/.npmrc && cp package.json www/package.json && cd www && zip -r Archive.zip . && cd ..",
+    "prod": "node ./www/server.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "dependencies": {
