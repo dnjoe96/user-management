@@ -108,7 +108,7 @@ router.get('/activate/:user_id/:token', async (req, res) => {
   } else if (user.active === '1') {
       res.status(400).send({status: "false", message: `User ${user.username} already activated`});
   } else if (user.activation_token !== data.token) {
-      res.status(200).send({status: "false", message: `User ${user.username} already activated`});
+      res.status(200).send({status: "false", message: `User ${user.username} invalid activation token for user`});
   } else {
     user.update({active: '1', activation_token: ''});
     res.status(200).send({status: 'true', message: `User ${user.username} is activated. Congratulations!!`})
@@ -117,7 +117,26 @@ router.get('/activate/:user_id/:token', async (req, res) => {
 
 router.put('/deactivate', async (req, res) => {
   // account deactivation endpoint
-  res.status(200).send({status: 'true', message: `User ${user.username} is activated. Congratulations!!`})
+
+  const data = req.body
+
+  if (!data.username) {
+    res.status(400).send({status: 'false', message: 'provide username'})
+  }
+
+  let user;
+  try {
+    user = await User.findOne({where: {username: data.username}});
+    if (!user) {
+      res.status(404).send({status: "false", message: `user ${data.username} not found`});
+    } else {
+      user.update()
+    }
+  } catch (err) {
+    res.status(400).send({status: "false", message: `${err}`});
+  }
+  user.update({active: '0'});
+  res.status(200).send({status: 'true', message: `User ${user.username} is deactivated`})
 });
 
 router.put('/role', async (req, res) => {
