@@ -1,16 +1,13 @@
-import {Sequelize} from 'sequelize';
+import { Sequelize } from 'sequelize';
 import { config } from './config/config.js';
 
 
-const c = config.dev;
-
-// Instantiate new Sequelize instance!
-export const sequelize = new Sequelize({
-  "username": c.username,
-  "password": c.password,
-  "database": c.database,
-  "host":     c.host,
-
-  dialect: 'postgres',
-  storage: ':memory:',
-});
+export const sequelize = new Sequelize(
+  config.dev.database,
+  config.dev.username,
+  config.dev.password,
+  {
+    host: config.dev.host,
+    dialect: config.dev.dialect
+  }
+);

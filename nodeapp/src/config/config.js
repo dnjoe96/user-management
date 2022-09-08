@@ -1,9 +1,9 @@
 export const config = {
   "dev": {
     "username": "postgres",
-    "password": "postgres12",
+    "password": "Postgres12",
     "database": "softdev01",
-    "host": "database-1.c8cyuepuaocx.us-east-1.rds.amazonaws.com",
+    "host": "soft-dev.cixnnif6iavq.us-east-1.rds.amazonaws.com",
     "dialect": "postgres",
     "aws_region": "us-east-1",
     "aws_profile": "default",
@@ -18,5 +18,9 @@ export const config = {
     "database": "udagram_prod",
     "host": "",
     "dialect": "postgres"
+  },
+  "express": {
+    "post": "",
+    "host": ""
   }
 }

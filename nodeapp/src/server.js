@@ -1,21 +1,32 @@
 import express from 'express';
+import cors from 'cors'
 import { sequelize } from './sequelize.js';
 
 import { IndexRouter } from './controllers/v0/index.router.js';
-
+import { config } from './config/config.js';
 import bodyParser from 'body-parser';
 
-// import { V0MODELS } from './controllers/v0/model.index.js';
+import { v0models } from './controllers/v0/model.index.js';
 
-// sequelize.addModels(V0MODELS);
-// sequelize.sync();
+
+sequelize.authenticate().then(() => {
+   console.log('Connection has been established successfully.');
+}).catch((error) => {
+   console.error('Unable to connect to the database: ', error);
+});
+
+// sequelize.sync().then(() => {
+//    console.log('Book table created successfully!');
+// }).catch((error) => {
+//    console.error('Unable to create table : ', error);
+// });
+
 (async () => {
-  // await sequelize.addModels(V0MODELS);
-  // await sequelize.sync();
 
   const app = express();
   const port = process.env.PORT || 8080; // default port to listen
   
+  app.use(cors());
   app.use(bodyParser.json());
 
   //CORS Should be restricted

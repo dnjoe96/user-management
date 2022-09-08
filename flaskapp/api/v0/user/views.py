@@ -165,3 +165,10 @@ def all_user():
     except sqlalchemy.exc as e:
         return jsonify({'status': 'false', 'message': 'Something went wrong'})
     return jsonify({'status': 'true', 'users': users})
+
+
+@user_app.route('/verification', methods=['GET'], strict_slashes=False)
+def verification():
+    """ Verify is you are authentication
+    """
+    return 'Not implemented'
