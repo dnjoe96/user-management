@@ -1,16 +1,16 @@
 export const config = {
   "dev": {
-    "username": "postgres",
-    "password": "Postgres12",
-    "database": "softdev01",
-    "host": "soft-dev.cixnnif6iavq.us-east-1.rds.amazonaws.com",
+    "username": process.env.DB_USERNAME,
+    "password": process.env.DB_PASSWORD,
+    "database": process.env.DB_NAME,
+    "host": process.env.DB_HOST,
     "dialect": "postgres",
     "aws_region": "us-east-1",
     "aws_profile": "default",
     "aws_media_bucket": "udagram-ruttner-dev"
   },
   "jwt": {
-    "secret": "secret"
+    "secret": process.env.SECRET
   },
   "prod": {
     "username": "",
