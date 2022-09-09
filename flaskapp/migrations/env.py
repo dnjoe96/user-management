@@ -19,7 +19,7 @@ logger = logging.getLogger('alembic.env')
 # add your model's MetaData object here
 # for 'autogenerate' support
 # from myapp import mymodel
-from api.v0.user.models.db import User, Session, Credentials
+from api.v0.user.models.user_model import User, Session, Credentials
 # target_metadata = mymodel.Base.metadata
 config.set_main_option(
     'sqlalchemy.url',

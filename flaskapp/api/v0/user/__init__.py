@@ -1,6 +1,6 @@
 from flask import Blueprint
 
-user_app = Blueprint('user_app', __name__, url_prefix='/user')
+# user = Blueprint('user', __name__, url_prefix='/api/v0/user')
+user_app = Blueprint('user_app', __name__, url_prefix='/api/v0/user')
 
-from .views import *
-
+from . import views

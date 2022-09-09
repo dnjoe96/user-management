@@ -2,21 +2,21 @@ import random
 
 import sqlalchemy.exc
 from flask import jsonify, request, redirect, url_for, abort
-from . import user_app
+from api.v0.user import user_app
 from werkzeug.security import generate_password_hash, check_password_hash
 import jwt
 from api.v0.app import db, app
 from uuid import uuid4
 from datetime import datetime, timedelta
-from api.v0.user.models.db import User, Credentials, Session
+from api.v0.user.models.user_model import User, Credentials, Session
 
 
-@user_app.route('/')
-def user_index():
-    return jsonify({'message': 'welcome to the root of the user API'})
+# @user_app.route('/')
+# def user_index():
+#     return jsonify({'message': 'welcome to the root of the user API'})
 
 
-@user_app.route('/login', methods=['POST'])
+@app.route('/api/v0/user/login', methods=['POST'])
 def login():
     username = request.json.get('username')
     password = request.json.get('password')
@@ -59,7 +59,7 @@ def login():
     return jsonify({'message': 'password incorrect'}), 403
 
 
-@user_app.route('/logout', methods=['DELETE'])
+@app.route('/api/v0/user/logout', methods=['DELETE'])
 def logout():
     """ Logout view """
     # session_id = request.cookies.get('session_id')
@@ -71,7 +71,7 @@ def logout():
     # abort(403)
 
 
-@user_app.route('/register', methods=['POST'], strict_slashes=False)
+@app.route('/api/v0/user/register', methods=['POST'], strict_slashes=False)
 def register():
     data = request.get_json()
 
@@ -110,18 +110,42 @@ def register():
     }), 201
 
 
-@user_app.route('/profile/<username>', methods=["GET"], strict_slashes=False)
+@app.route('/api/v0/user/profile/<username>', methods=["GET"], strict_slashes=False)
 def profile(username):
 
     return 'not implemented'
 
 
-@user_app.route('/edit/<username>')
+@app.route('/api/v0/user/edit/<username>', methods=['PUT'], strict_slashes=False)
 def edit_profile(username):
-    return 'not implemented'
+    data = request.get_json()
+
+    user = User.query.filter_by(username=username).first()
+    if not user:
+        return jsonify({'status': 'false', 'message': "User does not exit"}), 404
+    if user.active == '0':
+        return jsonify({'status': 'false', 'message': "User is not active.Activate user or contact admin"}), 400
+
+    fields = [one for one in User.__dict__.keys() if one[0] != '_']
+    for one in data.keys():
+        if one not in fields or one == 'username':
+            return jsonify({'status': 'false', 'message': f"{one} is not a valid field"}), 403
+
+    User.query.filter_by(username=username).update(data)
+
+    try:
+        db.session.commit()
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'status': 'false', 'message': 'something went wrong'}), 403
+
+    return jsonify({
+        'status': 'true',
+        'message': 'record updated'
+    }), 201
 
 
-@user_app.route('/activate/<user_id>/<token>', methods=['GET'], strict_slashes=False)
+@app.route('/api/v0/user/activate/<user_id>/<token>', methods=['GET'], strict_slashes=False)
 def activate_user(user_id, token):
     if not user_id and not token:
         return jsonify({'status': 'false', 'message': 'invalid activation string. contact admin'}), 403
@@ -138,7 +162,7 @@ def activate_user(user_id, token):
     return jsonify({'status': 'true', 'message': f"User {user.username} is activated. Congratulations!!"}), 200
 
 
-@user_app.route('/deactivate', methods=['PUT'], strict_slashes=False)
+@app.route('/api/v0/user/deactivate', methods=['PUT'], strict_slashes=False)
 def deactivate_user():
     data = request.json.get('username')
 
@@ -151,18 +175,17 @@ def deactivate_user():
     return jsonify({'status': 'true', 'message': f'user not found'}), 200
 
 
-
-@user_app.route('/role', methods=['POST'])
+@app.route('/api/v0/user/role', methods=['POST'])
 def add_role():
     return 'not implemented'
 
 
-@user_app.route('/role', methods=['GET'])
+@app.route('/api/v0/user/role', methods=['GET'])
 def get_roles():
     return 'not implemented'
 
 
-@user_app.route('/all', methods=['GET'], strict_slashes=False)
+@app.route('/api/v0/user/all', methods=['GET'], strict_slashes=False)
 def all_user():
     data = request.json.get('limit')
     print(data)
@@ -173,7 +196,7 @@ def all_user():
     return jsonify({'status': 'true', 'users': users})
 
 
-@user_app.route('/verification', methods=['GET'], strict_slashes=False)
+@app.route('/api/v0/user/verification', methods=['GET'], strict_slashes=False)
 def verification():
     """ Verify is you are authentication
     """

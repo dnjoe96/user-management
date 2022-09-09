@@ -16,6 +16,7 @@ MarkupSafe==2.1.1
 psycopg2-binary==2.9.3
 pycparser==2.21
 PyJWT==2.4.0
+python-dotenv==0.10.3
 six==1.16.0
 SQLAlchemy==1.4.40
 Werkzeug==2.2.2

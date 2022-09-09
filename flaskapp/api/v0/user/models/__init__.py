@@ -1,1 +1,1 @@
-from .db import User, Credentials, Session
+from .user_model import User, Credentials, Session
