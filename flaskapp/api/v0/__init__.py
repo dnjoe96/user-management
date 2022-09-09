@@ -18,7 +18,6 @@ def create_app(config_class=Config):
 
     from .user import user_app
     app.register_blueprint(user_app, url_prefix='/api/v0/user')
-    # app.register_blueprint(auth_bp, url_prefix='/auth')  # this include /auth in url
 
     return app
 

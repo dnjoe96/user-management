@@ -81,8 +81,8 @@ def register():
             return jsonify({'status': 'false', 'message': f"{one} is not a valid field"}), 403
 
     for one in ['firstname', 'lastname', 'username', 'email', 'password']:
-       if one not in data.keys():
-           return jsonify({'status': 'false', 'message': 'firstname, lastname, email, password is required'}), 403
+        if one not in data.keys():
+            return jsonify({'status': 'false', 'message': 'firstname, lastname, email, password is required'}), 403
 
     data['id'] = str(uuid4())
     data['activation_token'] = random.randint(0, 10000)
@@ -135,7 +135,7 @@ def edit_profile(username):
 
     try:
         db.session.commit()
-    except Exception as e:
+    except Exception:
         db.session.rollback()
         return jsonify({'status': 'false', 'message': 'something went wrong'}), 403
 
@@ -191,7 +191,7 @@ def all_user():
     print(data)
     try:
         users = [user.to_dict() for user in User.query.limit(data).all()]
-    except sqlalchemy.exc as e:
+    except sqlalchemy.exc:
         return jsonify({'status': 'false', 'message': 'Something went wrong'})
     return jsonify({'status': 'true', 'users': users})
 
