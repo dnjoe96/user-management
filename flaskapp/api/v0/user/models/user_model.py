@@ -4,6 +4,7 @@
 from api.v0.app import db
 from datetime import datetime
 from werkzeug.security import generate_password_hash, check_password_hash
+import bcrypt
 
 
 class User(db.Model):
@@ -59,11 +60,18 @@ class Credentials(db.Model):
     def to_dict(self):
         return {c.name: getattr(self, c.name) for c in self.__table__.columns}
 
-    def set_password(self, password):
-        self.password = generate_password_hash(password)
+    def set_password(self, password: str) -> None:
+        """ Function to hash password with salt and return
+        byte string password """
+        passwrd = password.encode()
+        self.password = bcrypt.hashpw(passwrd, bcrypt.gensalt()).decode()
 
-    def check_password(self, raw_password):
-        return check_password_hash(self.password, raw_password)
+    def check_password(self, raw_password: str) -> bool:
+        """ Function to validate if password matches a hashed password """
+        if bcrypt.checkpw(raw_password.encode('utf-8'), self.password.encode()):
+            return True
+        else:
+            return False
 
 
 class Session(db.Model):

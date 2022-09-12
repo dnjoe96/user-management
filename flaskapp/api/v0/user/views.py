@@ -1,5 +1,5 @@
 import random
-
+from functools import wraps
 import sqlalchemy.exc
 from flask import jsonify, request, redirect, url_for, abort
 from api.v0.user import user_app
@@ -15,8 +15,40 @@ from api.v0.user.models.user_model import User, Credentials, Session
 # def user_index():
 #     return jsonify({'message': 'welcome to the root of the user API'})
 
+@app.route('/api/v0/user', methods=['GET'], strict_slashes=False)
+def user_index():
+    return jsonify({'status': 'true', 'message': 'welcome to the user api'}), 200
 
-@app.route('/api/v0/user/login', methods=['POST'])
+
+def login_required(f):
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        token = None
+        # jwt is passed in the request header
+        print(request.headers)
+        if 'x-access-token' in request.headers:
+            token = request.headers['x-access-token']
+        # return 401 if token is not passed
+        if not token:
+            return jsonify({'message': 'You need to be logged in'}), 401
+
+        try:
+            # decoding the payload to fetch the stored details
+            data = jwt.decode(token, app.config['SECRET_KEY'], algorithms=["HS256"])
+            current_user = User.query.filter_by(id=data['id']).first()
+
+        except Exception as e:
+            print(f'{e.__class__} - {str(e)} - {e}')
+            return jsonify({
+                'message': 'Login Invalid'
+            }), 401
+        # returns the current logged in users contex to the routes
+        return f(current_user, *args, **kwargs)
+
+    return decorated
+
+
+@app.route('/api/v0/user/login', methods=['POST'], strict_slashes=False)
 def login():
     username = request.json.get('username')
     password = request.json.get('password')
@@ -33,23 +65,15 @@ def login():
     if not password:
         return jsonify({'status': 'false', 'message': 'no credential found for this user'}), 401
 
+    # if cred.check_password(password):
     if cred.check_password(password):
         session_id = uuid4()
         session = Session(user_id=user.id, token=session_id, date_created=datetime.utcnow())
 
-        # generates the JWT Token
-        payload = {
-            'id': user.id,
-            'exp': datetime.utcnow() + timedelta(minutes=30)
-        }
-
-        token = jwt.encode(payload, app.config['SECRET_KEY'], algorithm="HS256")
-        print(token)
         resp = jsonify({
-            'status': 'ok',
+            'status': 'true',
             'message': f"{user.username} logged in successful",
-            'session_id': session_id,
-            'token': token
+            'session_id': session_id
         })
         db.session.add(session)
         db.session.commit()
