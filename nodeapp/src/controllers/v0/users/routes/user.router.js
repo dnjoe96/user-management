@@ -3,7 +3,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { User } from '../models/Userc.js';
 import { Credential } from '../models/Credential.js';
 import { Session } from '../models/Session.js';
-import { requireAuth, generatePassword, generateJWT, comparePasswords } from './auth.router.js';
+import { requireAuth, generatePassword, comparePasswords } from './auth.router.js';
 
 const router = Router();
 
@@ -13,67 +13,91 @@ router.get('/', async (req, res) => {
 });
 
 router.post('/login', async (req, res) => {
-    const username = req.body.username;
-    const password = req.body.password;
-    // check email is valid
-    // if (!email || !EmailValidator.validate(email)) {
-    //     return res.status(400).send({ auth: false, message: 'Email is required or malformed' });
-    // }
+  const username = req.body.username;
+  const password = req.body.password;
+  // check email is valid
+  // if (!email || !EmailValidator.validate(email)) {
+  //     return res.status(400).send({ auth: false, message: 'Email is required or malformed' });
+  // }
 
-    // check email password valid
-    if (!password) {
-        return res.status(400).send({ auth: false, message: 'Password is required' });
+  // check email password valid
+  if (!password) {
+      return res.status(400).send({ auth: false, message: 'Password is required' });
+  }
+
+  let user;
+  try {
+    user = await User.findOne({ where: {username: username}});
+  } catch (err) {
+    res.status(400).send({status: "false", message: `${err}`});
+  }
+  // check that user exists
+  if(!user) {
+      return res.status(401).send({ auth: false, message: 'Unauthorized' });
+  }
+
+  // check that the password matches
+  let cred = await Credential.findOne({ where: {user_id: user.id}});
+
+  let password_hash = cred.password;
+  const authValid = await comparePasswords(password, password_hash)
+
+  if(!authValid) {
+    res.status(401).send({ auth: false, message: 'Unauthorized' });
+  }
+
+  try {
+    let session = await Session.findOne({ where: {user_id: user.id}});
+    if(session) {
+      res.status(401).send({status: 'false', message: 'you are already logged in', session_id: session.token});
     }
+  } catch (err) {
+    res.status(400).send({status: "false", message: `${err}`});
+  }
 
-    let user;
-    try {
-      user = await User.findOne({ where: {username: username}});
-    } catch (err) {
-      res.status(400).send({status: "false", message: `${err}`});
-    }
-    // check that user exists
-    if(!user) {
-        return res.status(401).send({ auth: false, message: 'Unauthorized' });
-    }
+  
+  const sessionid = uuidv4();
+// console.log(data);
 
-    // check that the password matches
-    let cred = await Credential.findOne({ where: {user_id: user.id}});
+  const session = await new Session({
+    user_id: user.id,
+    token: sessionid,
+    data_created: new Date().getDate()
+  })
 
-    let password_hash = cred.password;
-    const authValid = await comparePasswords(password, password_hash)
+  let savedSession;
+  try {
+      savedSession = await session.save();
+  } catch (e) {
+      console.log(e);
+  }
 
-    if(!authValid) {
-        return res.status(401).send({ auth: false, message: 'Unauthorized' });
-    }
-
-    const sessionid = uuidv4();
-  // console.log(data);
-
-    const session = await new Session({
-      user_id: user.id,
-      token: sessionid,
-      data_created: new Date().getDate()
-    })
-
-    let savedSession;
-    try {
-        savedSession = await session.save();
-    } catch (e) {
-        console.log(e);
-    }
-
-    res.status(200).send({
-      'status': 'true',
-      'message': `${user.username} logged in successfully`,
-      'session_id': sessionid
-    });
+  res.status(200).send({
+    'status': 'true',
+    'message': `${user.username} logged in successfully`,
+    'session_id': sessionid
+  });
 });
 
 
-router.delete('/logout', async (req, res) => {
+router.delete('/logout', requireAuth, async (req, res) => {
   // logout endpoint
-  res.status(200).send('This is the logout endpoint')
+
+  let session;
+  try {
+    session = await Session.findOne({ where: {token: req.headers.authentication}});
+  } catch (err) {
+    res.status(400).send({status: "false", message: `${err}`});
+  }
+  console.log('got here');
+  if (session) {
+    session.destroy();
+    res.removeHeader('current_user');
+    res.status(200).send({status: true, message: 'you are logged out, bye'});
+  }
+  res.status(400).send({status: true, message: 'You are not logged in'});
 });
+
 
 router.post('/register', async (req, res) => {
   // user register endpoint
@@ -130,9 +154,14 @@ router.post('/register', async (req, res) => {
   })
 });
 
-router.get('/profile/:username', async (req, res) => {
+router.get('/profile/:username', requireAuth, async (req, res) => {
   // user profile endpoint
-  res.status(200).send('This is the profile endpoint')
+  const data = req.params
+
+  if ( res.current_user.username !== data.username ) {
+    res.status(401).send({status: 'false', message: 'You need to login, to access resourse'})
+  }
+  res.status(200).send({status: 'true', user: res.current_user})
 });
 
 router.put('/edit/:username', async (req, res) => {
@@ -235,13 +264,6 @@ router.get('/verification',
         return res.status(200).send({ auth: true, message: 'Authenticated.' });
 });
 
-// router.get('/:id', async (req, res) => {
-//     let { id } = req.params;
-//     const item = await User.findByPk(id);
-//     res.send(item);
-// });
-
-
 
 //register a new user
 router.post('/sdsdssdsd', async (req, res) => {
@@ -282,9 +304,6 @@ router.post('/sdsdssdsd', async (req, res) => {
     } catch (e) {
         throw e;
     }
-
-    // Generate JWT
-    // const jwt = generateJWT(savedUser);
 
     res.status(201).send({token: jwt, user: savedUser.short()});
 });

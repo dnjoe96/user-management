@@ -1,8 +1,10 @@
+// import { Session } from '@sentry/node';
 import * as bcrypt from 'bcrypt';
 import * as jwt from 'jsonwebtoken';
 
 import { config } from '../../../../config/config.js';
-
+import { User } from '../models/Userc.js';
+import { Session } from '../models/Session.js';
 
 export async function generatePassword(plainTextPassword) {
   //@TODO Use Bcrypt to Generated Salted Hashed Passwords
@@ -15,37 +17,43 @@ export async function generatePassword(plainTextPassword) {
 export async function comparePasswords(plainTextPassword, hash) {
   //@TODO Use Bcrypt to Compare your password to your Salted Hashed Password
   const validPassword = await bcrypt.compare(plainTextPassword, hash);
-    if (validPassword) {
-      return true
-    } else {
-      return false
-    }
+  if (validPassword) {
+    return true
+  } else {
+    return false
+  }
 }
 
 export function generateJWT(user) {
-    //@TODO Use jwt to create a new JWT Payload containing
-    return jwt.sign(user.toJSON(), config.jwt.secret);
+  //@TODO Use jwt to create a new JWT Payload containing
+  return jwt.sign(user.toJSON(), config.jwt.secret);
 }
 
-export function requireAuth(req, res, next) {
-    console.warn("auth.router not yet implemented, you'll cover this in lesson 5")
-    return next();
-    // if (!req.headers || !req.headers.authorization){
-    //     return res.status(401).send({ message: 'No authorization headers.' });
-    // }
-    
+export async function requireAuth(req, res, next) {
+  if (!req.headers || !req.headers.authentication){
+      return res.status(401).send({ message: 'No authentication headers.' });
+  }
+  
+  const sessionid = req.headers.authentication;
 
-    // const token_bearer = req.headers.authorization.split(' ');
-    // if(token_bearer.length != 2){
-    //     return res.status(401).send({ message: 'Malformed token.' });
-    // }
-    
-    // const token = token_bearer[1];
+  let session;
+  try {
+    session = await Session.findOne({ where: {token: sessionid}});
+  } catch (err) {
+    res.status(400).send({status: "false", message: `${err}`});
+  }
 
-    // return jwt.verify(token, "hello", (err, decoded) => {
-    //   if (err) {
-    //     return res.status(500).send({ auth: false, message: 'Failed to authenticate.' });
-    //   }
-    //   return next();
-    // });
+  if(!session) {
+      res.status(401).send({status: 'false', message: 'Login required'});
+  }
+
+  let user;
+  try {
+    user = await User.findOne({ where: {id: session.user_id}});
+  } catch (err) {
+    res.status(400).send({status: "false", message: `${err}`});
+  }
+  
+  res.current_user = user;  
+  return next();
 }
