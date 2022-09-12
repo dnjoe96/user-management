@@ -20,30 +20,30 @@ def user_index():
     return jsonify({'status': 'true', 'message': 'welcome to the user api'}), 200
 
 
-def login_required(f):
+def auth_required(f):
     @wraps(f)
     def decorated(*args, **kwargs):
         token = None
         # jwt is passed in the request header
-        print(request.headers)
-        if 'x-access-token' in request.headers:
-            token = request.headers['x-access-token']
-        # return 401 if token is not passed
-        if not token:
+        # print(request.headers)
+        if 'authentication' in request.headers:
+            sessionid = request.headers['authentication']
+        else:
             return jsonify({'message': 'You need to be logged in'}), 401
-
+        print(sessionid)
         try:
-            # decoding the payload to fetch the stored details
-            data = jwt.decode(token, app.config['SECRET_KEY'], algorithms=["HS256"])
-            current_user = User.query.filter_by(id=data['id']).first()
-
+            session = Session.query.filter_by(token=sessionid).first()
+            if session:
+                current_user = User.query.filter_by(id=session.user_id).first()
+            else:
+                return jsonify({'message': 'You need to be logged in'}), 401
         except Exception as e:
             print(f'{e.__class__} - {str(e)} - {e}')
             return jsonify({
                 'message': 'Login Invalid'
             }), 401
         # returns the current logged in users contex to the routes
-        return f(current_user, *args, **kwargs)
+        return f(current_user.to_dict(), *args, **kwargs)
 
     return decorated
 
@@ -66,33 +66,41 @@ def login():
         return jsonify({'status': 'false', 'message': 'no credential found for this user'}), 401
 
     # if cred.check_password(password):
-    if cred.check_password(password):
-        session_id = uuid4()
-        session = Session(user_id=user.id, token=session_id, date_created=datetime.utcnow())
+    if not cred.check_password(password):
+        return jsonify({'status': 'false', 'message': 'password incorrect'}), 403
 
-        resp = jsonify({
-            'status': 'true',
-            'message': f"{user.username} logged in successful",
-            'session_id': session_id
-        })
-        db.session.add(session)
-        db.session.commit()
-        resp.set_cookie(str(session_id))
-        return resp, 200
+    session = Session.query.filter_by(user_id=user.id).first()
+    print(session)
+    if session:
+        return jsonify({'status': 'false', 'message': 'you are already logged in', 'session_id': session.token}), 200
+    session_id = uuid4()
+    session = Session(user_id=user.id, token=session_id, date_created=datetime.utcnow())
 
-    return jsonify({'message': 'password incorrect'}), 403
+    resp = jsonify({
+        'status': 'true',
+        'message': f"{user.username} logged in successful",
+        'session_id': session_id
+    })
+    db.session.add(session)
+    db.session.commit()
+    resp.set_cookie(str(session_id))
+    return resp, 200
 
 
 @app.route('/api/v0/user/logout', methods=['DELETE'])
-def logout():
+@auth_required
+def logout(current_user):
     """ Logout view """
-    # session_id = request.cookies.get('session_id')
-    # if session_id:
-    #     user = AUTH.get_user_from_session_id(session_id)
-    #     if user:
-    #         AUTH.destroy_session(user.id)
-    #         return redirect(url_for('index'))
-    # abort(403)
+
+    session = Session.query.filter_by(user_id=current_user.id).first()
+    print(session)
+    if session:
+
+        db.session.delete(session)
+        db.session.commit()
+        # resp.set_cookie(str(session_id))
+        return jsonify({'status': 'true', 'message': 'you are already logged out, bye'}), 200
+    return jsonify({'status': 'false', 'message': 'You are not logged in'}), 400
 
 
 @app.route('/api/v0/user/register', methods=['POST'], strict_slashes=False)
@@ -135,9 +143,12 @@ def register():
 
 
 @app.route('/api/v0/user/profile/<username>', methods=["GET"], strict_slashes=False)
-def profile(username):
-
-    return 'not implemented'
+@auth_required
+def profile(current_user, username):
+    print(current_user)
+    if current_user['username'] != username:
+        return jsonify({'status': 'false', 'message': 'Unauthorised user'}), 401
+    return jsonify({'status': 'true', 'user': current_user})
 
 
 @app.route('/api/v0/user/edit/<username>', methods=['PUT'], strict_slashes=False)
