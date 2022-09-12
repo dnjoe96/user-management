@@ -92,14 +92,14 @@ def login():
 def logout(current_user):
     """ Logout view """
 
-    session = Session.query.filter_by(user_id=current_user.id).first()
+    session = Session.query.filter_by(user_id=current_user['id']).first()
     print(session)
     if session:
 
         db.session.delete(session)
         db.session.commit()
         # resp.set_cookie(str(session_id))
-        return jsonify({'status': 'true', 'message': 'you are already logged out, bye'}), 200
+        return jsonify({'status': 'true', 'message': 'you are logged out, bye'}), 200
     return jsonify({'status': 'false', 'message': 'You are not logged in'}), 400
 
 
