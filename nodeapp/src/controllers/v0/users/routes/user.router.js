@@ -13,9 +13,62 @@ router.get('/', async (req, res) => {
 });
 
 router.post('/login', async (req, res) => {
-  // login endpoint
-  res.status(200).send('This is the login endpoint')
+    const username = req.body.username;
+    const password = req.body.password;
+    // check email is valid
+    // if (!email || !EmailValidator.validate(email)) {
+    //     return res.status(400).send({ auth: false, message: 'Email is required or malformed' });
+    // }
+
+    // check email password valid
+    if (!password) {
+        return res.status(400).send({ auth: false, message: 'Password is required' });
+    }
+
+    let user;
+    try {
+      user = await User.findOne({ where: {username: username}});
+    } catch (err) {
+      res.status(400).send({status: "false", message: `${err}`});
+    }
+    // check that user exists
+    if(!user) {
+        return res.status(401).send({ auth: false, message: 'Unauthorized' });
+    }
+
+    // check that the password matches
+    let cred = await Credential.findOne({ where: {user_id: user.id}});
+
+    let password_hash = cred.password;
+    const authValid = await comparePasswords(password, password_hash)
+
+    if(!authValid) {
+        return res.status(401).send({ auth: false, message: 'Unauthorized' });
+    }
+
+    const sessionid = uuidv4();
+  // console.log(data);
+
+    const session = await new Session({
+      user_id: user.id,
+      token: sessionid,
+      data_created: new Date().getDate()
+    })
+
+    let savedSession;
+    try {
+        savedSession = await session.save();
+    } catch (e) {
+        console.log(e);
+    }
+
+    res.status(200).send({
+      'status': 'true',
+      'message': `${user.username} logged in successfully`,
+      'session_id': sessionid
+    });
 });
+
 
 router.delete('/logout', async (req, res) => {
   // logout endpoint
@@ -77,15 +130,42 @@ router.post('/register', async (req, res) => {
   })
 });
 
-router.get('/profile/<username>', async (req, res) => {
+router.get('/profile/:username', async (req, res) => {
   // user profile endpoint
   res.status(200).send('This is the profile endpoint')
 });
 
-router.put('/edit/<username>', async (req, res) => {
+router.put('/edit/:username', async (req, res) => {
   // user edit endpoint
-  res.status(200).send('This is the user edit endpoint')
+  const username = req.params.username
+  const data = req.body
+
+  let user;
+  try {
+    user = await User.findOne({where: {username: username}});
+  } catch (err) {
+    res.status(400).send({status: "false", message: `${err}`});
+  }
+  // check that user exists
+  if(!user) {
+      return res.status(400).send({ status: 'false', message: 'User not found' });
+  }
+
+  for ( let one in data ) {
+    if (one === 'username' || one === 'password') {
+      return res.status(400).send({ status: 'false', message: `${one} is not a valid field`});
+    }
+  }
+
+  
+  try {
+    user.update(data);
+  } catch (err) {
+    res.status(400).send({status: "false", message: `${err}`});
+  }
+  res.status(200).send({'status': 'true', 'message': 'record updated'})
 });
+
 
 router.get('/activate/:user_id/:token', async (req, res) => {
   // user account activation endpoint
@@ -161,37 +241,7 @@ router.get('/verification',
 //     res.send(item);
 // });
 
-// router.post('/login', async (req, res) => {
-//     const email = req.body.email;
-//     const password = req.body.password;
-//     // check email is valid
-//     if (!email || !EmailValidator.validate(email)) {
-//         return res.status(400).send({ auth: false, message: 'Email is required or malformed' });
-//     }
 
-//     // check email password valid
-//     if (!password) {
-//         return res.status(400).send({ auth: false, message: 'Password is required' });
-//     }
-
-//     const user = await User.findByPk(email);
-//     // check that user exists
-//     if(!user) {
-//         return res.status(401).send({ auth: false, message: 'Unauthorized' });
-//     }
-
-//     // check that the password matches
-//     const authValid = await comparePasswords(password, user.password_hash)
-
-//     if(!authValid) {
-//         return res.status(401).send({ auth: false, message: 'Unauthorized' });
-//     }
-
-//     // Generate JWT
-//     const jwt = generateJWT(user);
-
-//     res.status(200).send({ auth: true, token: jwt, user: user.short()});
-// });
 
 //register a new user
 router.post('/sdsdssdsd', async (req, res) => {
@@ -208,7 +258,12 @@ router.post('/sdsdssdsd', async (req, res) => {
     }
 
     // find the user
-    const user = await User.findByPk(email);
+    let user;
+    try {
+      user = await User.findOne({ where: {id: data.user_id}});
+    } catch (err) {
+      res.status(400).send({status: "false", message: `${err}`});
+    }
     // check that user doesnt exists
     if(user) {
         return res.status(422).send({ auth: false, message: 'User may already exist' });
