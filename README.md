@@ -15,6 +15,13 @@ Two applications with similar interface (input and output) are created to intera
 
 The database employed in this application is a Relational database. It is adaptable to any of them.
 
+
+<p align="center">
+  <img src="https://github.com/dnjoe96/user-management/blob/main/img/database model.png?raw=true"
+       alt="user logo" width="200" height="200"
+  />
+</p>
+
 ## Tech Stack :poodle:
 
 - Node Js 
