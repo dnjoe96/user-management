@@ -1,4 +1,4 @@
-<h1 align="left">Flask App</h1>
+<h1 align="left">Node App</h1>
 <p align="left">
 
 Here express js is employed as a robust application to create backend application with Node js. It is used to create the application in a modular way such that the user module can be extracted and used for other applications as part of a large module collection representing functionality.
